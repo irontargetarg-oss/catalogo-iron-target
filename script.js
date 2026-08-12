@@ -167,8 +167,8 @@ function renderizar(lista) {
     // disponible siempre, para no tener que precargar opciones fijas por producto.
     const campoPersonalizacion =
       '<div class="form-row" style="margin:6px 0 0;">' +
-        '<label style="font-size:12px;">¿Querés personalizarlo? (espesor, color, medidas, etc. — opcional)</label>' +
-        '<input type="text" id="personalizacion-' + p.id + '" placeholder="Ej: chapa de 6mm, color negro mate...">' +
+        '<label style="font-size:12px;">¿Querés personalizarlo? (espesor de chapa hasta 1 pulgada, color, medidas, etc. — opcional)</label>' +
+        '<input type="text" id="personalizacion-' + p.id + '" placeholder="Ej: chapa de 6mm (hasta 1 pulgada disponible), color negro mate...">' +
       '</div>';
 
     card.innerHTML =
