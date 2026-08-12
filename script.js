@@ -38,7 +38,7 @@ function llamarApi(action, extraParams) {
     const timeoutId = setTimeout(function () {
       limpiar();
       reject(new Error('Tiempo de espera agotado.'));
-    }, 20000);
+    }, 25000);
 
     function limpiar() {
       clearTimeout(timeoutId);
@@ -60,14 +60,18 @@ function llamarApi(action, extraParams) {
 }
 
 function cargar() {
+  const estado = document.getElementById('estado');
+  estado.style.display = 'block';
+  estado.innerHTML = 'Cargando catálogo... puede tardar unos segundos.';
   llamarApi('productos').then(function (data) {
     productos = (data && data.productos) || [];
-    document.getElementById('estado').style.display = 'none';
+    estado.style.display = 'none';
     poblarFiltroLineas();
     renderizar(productos);
     actualizarBadgeCarrito();
   }).catch(function () {
-    document.getElementById('estado').textContent = 'No se pudo cargar el catálogo. Reintentá más tarde.';
+    estado.innerHTML = 'No se pudo cargar el catálogo. Puede que Google esté tardando más de lo normal.<br>' +
+      '<button class="secondary" style="margin-top:10px;" onclick="cargar()">Reintentar</button>';
   });
 }
 
@@ -158,6 +162,15 @@ function renderizar(lista) {
         '</div>'
       : '';
 
+    // Somos fabricantes: cualquier producto se puede pedir personalizado
+    // (espesor de chapa, color, medidas, etc.). Campo libre y opcional,
+    // disponible siempre, para no tener que precargar opciones fijas por producto.
+    const campoPersonalizacion =
+      '<div class="form-row" style="margin:6px 0 0;">' +
+        '<label style="font-size:12px;">¿Querés personalizarlo? (espesor, color, medidas, etc. — opcional)</label>' +
+        '<input type="text" id="personalizacion-' + p.id + '" placeholder="Ej: chapa de 6mm, color negro mate...">' +
+      '</div>';
+
     card.innerHTML =
       '<div class="card-media">' + media + '</div>' +
       '<div class="body">' +
@@ -174,6 +187,7 @@ function renderizar(lista) {
         '</div>' +
         '<div class="price-row">' + badgeStock + '</div>' +
         selectorCalibre +
+        campoPersonalizacion +
         botones +
       '</div>';
     grid.appendChild(card);
@@ -209,6 +223,14 @@ function calibreRequeridoYFaltante(p) {
   return !!(p.calibres && p.calibres.length && !obtenerCalibreSeleccionado(p));
 }
 
+// ---------- PERSONALIZACIÓN (espesor, color, medidas, etc.) ----------
+// Somos fabricantes: cualquier producto se puede pedir personalizado. Campo de
+// texto libre y opcional, disponible siempre en cada tarjeta del catálogo.
+function obtenerPersonalizacion(p) {
+  const input = document.getElementById('personalizacion-' + p.id);
+  return input ? input.value.trim() : '';
+}
+
 // ---------- SOLO CONSULTA (sin formulario, abre WhatsApp directo) ----------
 function consultarProducto(productoId) {
   const p = productos.find(function (x) { return x.id === productoId; });
@@ -218,16 +240,21 @@ function consultarProducto(productoId) {
     return;
   }
   const calibre = obtenerCalibreSeleccionado(p);
+  const personalizacion = obtenerPersonalizacion(p);
   const texto =
     'Hola! Quiero hacer una consulta sobre este producto de Iron Target:\n\n' +
-    p.nombre + (calibre ? ' (Calibre: ' + calibre + ')' : '') + ' — ' + formatoPrecio(p.precioVigente);
+    p.nombre + (calibre ? ' (Calibre: ' + calibre + ')' : '') + ' — ' + formatoPrecio(p.precioVigente) +
+    (personalizacion ? '\nPersonalización: ' + personalizacion : '');
   const url = 'https://wa.me/' + NUMERO_WHATSAPP + '?text=' + encodeURIComponent(texto);
   abrirWhatsApp(url);
 }
 
 // ---------- CARRITO ----------
-// El cliente puede agregar varios productos (de distinto tipo, o el mismo con
-// distinto calibre) antes de mandar un único pedido con todo junto.
+// El cliente puede agregar varios productos (de distinto tipo, con distinto
+// calibre, o con distinta personalización) antes de mandar un único pedido
+// con todo junto. La personalización entra en la "clave" de agrupación para
+// que dos pedidos del mismo producto con personalizaciones distintas no se
+// mezclen en una sola línea del carrito.
 function agregarAlCarrito(productoId) {
   const p = productos.find(function (x) { return x.id === productoId; });
   if (!p) return;
@@ -236,7 +263,8 @@ function agregarAlCarrito(productoId) {
     return;
   }
   const calibre = obtenerCalibreSeleccionado(p);
-  const clave = p.id + '|' + calibre;
+  const personalizacion = obtenerPersonalizacion(p);
+  const clave = p.id + '|' + calibre + '|' + personalizacion;
   const existente = carrito.find(function (item) { return item.clave === clave; });
   if (existente) {
     existente.cantidad += 1;
@@ -246,6 +274,7 @@ function agregarAlCarrito(productoId) {
       productoId: p.id,
       nombre: p.nombre,
       calibre: calibre,
+      personalizacion: personalizacion,
       enFeria: p.enFeria,
       precioVigente: p.precioVigente,
       precioEfectivo: p.precioEfectivo,
@@ -301,6 +330,7 @@ function renderizarCarrito() {
       '<div class="cart-item-info">' +
         '<div class="nombre">' + escapeHtml(item.nombre) + '</div>' +
         (item.calibre ? '<div class="detalle">Calibre: ' + escapeHtml(item.calibre) + '</div>' : '') +
+        (item.personalizacion ? '<div class="detalle">🔧 ' + escapeHtml(item.personalizacion) + '</div>' : '') +
         '<div class="detalle">' + formatoPrecio(item.precioVigente) + ' c/u' + (item.enFeria ? ' (precio de feria, todos los medios de pago)' : '') + '</div>' +
       '</div>' +
       '<div class="cart-qty">' +
@@ -342,6 +372,7 @@ function continuarPedido() {
   document.getElementById('modalResumenPedido').innerHTML = carrito.map(function (item) {
     return '<div>• ' + escapeHtml(item.nombre) +
       (item.calibre ? ' (Calibre: ' + escapeHtml(item.calibre) + ')' : '') +
+      (item.personalizacion ? ' 🔧 ' + escapeHtml(item.personalizacion) : '') +
       ' x' + item.cantidad + ' — ' + formatoPrecio(item.precioVigente * item.cantidad) + '</div>';
   }).join('');
   document.getElementById('modalMsg').innerHTML = '';
@@ -432,6 +463,7 @@ function enviarPedido() {
       productoId: item.productoId,
       productoNombre: item.nombre,
       calibre: item.calibre,
+      personalizacion: item.personalizacion,
       cantidad: item.cantidad,
       precioUnitario: (!item.enFeria && esEfectivo) ? item.precioEfectivo : item.precioVigente
     };
@@ -454,6 +486,7 @@ function enviarPedido() {
   items.forEach(function (it) {
     texto += '• ' + it.productoNombre +
       (it.calibre ? ' (Calibre: ' + it.calibre + ')' : '') +
+      (it.personalizacion ? ' 🔧 ' + it.personalizacion : '') +
       ' x' + it.cantidad + ' — ' + formatoPrecio(it.precioUnitario * it.cantidad) + '\n';
   });
   texto += '\nTotal: ' + formatoPrecio(total) + (esEfectivo ? ' (efectivo)' : ' (transferencia/tarjeta)') + '\n';
