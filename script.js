@@ -390,7 +390,8 @@ function cerrarModal() {
 
 // Ajusta el formulario según si es envío o retiro: la dirección solo hace
 // falta con envío, y el pago en efectivo solo está disponible retirando
-// en el punto de entrega. También avisa si la compra ya llega al envío gratis.
+// en el punto de entrega. También avisa que el envío se cotiza por WhatsApp
+// según la dirección (siempre tiene costo, no hay envío gratis).
 function actualizarFormularioPedido() {
   const esRetiro = document.getElementById('pedMetodoEntrega').value === 'Retiro';
   document.getElementById('filaDireccion').style.display = esRetiro ? 'none' : 'block';
@@ -401,11 +402,8 @@ function actualizarFormularioPedido() {
   if (esRetiro) {
     notaEnvio.style.display = 'none';
   } else {
-    const totalCarrito = calcularTotalCarrito();
     notaEnvio.style.display = 'block';
-    notaEnvio.innerHTML = totalCarrito >= 200000
-      ? 'Tu compra (' + formatoPrecio(totalCarrito) + ') ya llega al envío gratis.'
-      : 'Envío gratis a partir de $200.000 de compra. Con tu compra actual (' + formatoPrecio(totalCarrito) + '), el costo de envío se define según tu dirección — te lo confirmamos por WhatsApp.';
+    notaEnvio.innerHTML = 'El costo de envío se cotiza por WhatsApp de acuerdo a tu dirección.';
   }
 
   const selectPago = document.getElementById('pedMetodoPago');
