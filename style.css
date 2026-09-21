@@ -5,9 +5,9 @@
     --bg-input: #1c1f22;
     --steel: #3a3f45;
     --steel-light: #7c8288;
-    --ember: #ff5a1f;
-    --ember-dark: #c73e0f;
-    --ember-soft: rgba(255,90,31,0.16);
+    --ember: #ec0806;
+    --ember-dark: #a50604;
+    --ember-soft: rgba(236,8,6,0.16);
     --brass: #cf9d2e;
     --danger: #d62828;
     --success: #2fae5c;
@@ -22,7 +22,7 @@
     margin: 0;
     background: var(--bg);
     background-image:
-      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,90,31,0.10), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(236,8,6,0.10), transparent 60%),
       repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 26px);
     color: var(--text);
     font-size: 15px;
@@ -66,7 +66,7 @@
     width: auto;
     border-radius: 4px;
     flex-shrink: 0;
-    box-shadow: 0 0 0 2px var(--ember), 0 0 18px rgba(255,90,31,0.45);
+    box-shadow: 0 0 0 2px var(--ember), 0 0 18px rgba(236,8,6,0.45);
   }
   header.top .header-contacts {
     display: flex;
@@ -321,7 +321,7 @@
     background: linear-gradient(135deg, var(--ember) 0%, var(--ember-dark) 100%);
     color: #1a0800;
     font-weight: 700;
-    box-shadow: 0 4px 18px rgba(255,90,31,0.45);
+    box-shadow: 0 4px 18px rgba(236,8,6,0.45);
     z-index: 900;
     display: none;
     align-items: center;
@@ -539,7 +539,7 @@
   .msg { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
   .msg.ok { background: rgba(47,174,92,0.15); color: #7fe3a3; border: 1px solid rgba(47,174,92,0.4); }
   .msg.err { background: rgba(214,40,40,0.15); color: #ff9d9d; border: 1px solid rgba(214,40,40,0.4); }
-  .msg.info { background: var(--ember-soft); color: #ffb08a; border: 1px solid rgba(255,90,31,0.4); }
+  .msg.info { background: var(--ember-soft); color: #ffada6; border: 1px solid rgba(236,8,6,0.4); }
 
   .stock-badge { font-size: 12px; font-weight: 600; }
   .spinner { font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; }

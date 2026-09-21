@@ -167,8 +167,8 @@ function renderizar(lista) {
     // disponible siempre, para no tener que precargar opciones fijas por producto.
     const campoPersonalizacion =
       '<div class="form-row" style="margin:6px 0 0;">' +
-        '<label style="font-size:12px;">¿Querés personalizarlo? (espesor de chapa hasta 1 pulgada, color, medidas, etc. — opcional)</label>' +
-        '<input type="text" id="personalizacion-' + p.id + '" placeholder="Ej: chapa de 6mm (hasta 1 pulgada disponible), color negro mate...">' +
+        '<label style="font-size:12px;">¿Querés personalizarlo? (espesor, color, medidas, etc. — opcional)</label>' +
+        '<input type="text" id="personalizacion-' + p.id + '" placeholder="Ej: chapa de 6mm, color negro mate...">' +
       '</div>';
 
     card.innerHTML =
@@ -383,7 +383,7 @@ function continuarPedido() {
 
 function cerrarModal() {
   document.getElementById('modalPedido').classList.remove('open');
-  ['pedNombre', 'pedTelefono', 'pedDireccion', 'pedCodigoPostal', 'pedDetalles', 'pedHorario'].forEach(function (id) {
+  ['pedNombre', 'pedTelefono', 'pedDireccion', 'pedCiudad', 'pedProvincia', 'pedCodigoPostal', 'pedDetalles', 'pedHorario'].forEach(function (id) {
     document.getElementById(id).value = '';
   });
 }
@@ -395,6 +395,8 @@ function cerrarModal() {
 function actualizarFormularioPedido() {
   const esRetiro = document.getElementById('pedMetodoEntrega').value === 'Retiro';
   document.getElementById('filaDireccion').style.display = esRetiro ? 'none' : 'block';
+  document.getElementById('filaCiudad').style.display = esRetiro ? 'none' : 'block';
+  document.getElementById('filaProvincia').style.display = esRetiro ? 'none' : 'block';
   document.getElementById('filaCodigoPostal').style.display = esRetiro ? 'none' : 'block';
   document.getElementById('notaRetiro').style.display = esRetiro ? 'block' : 'none';
 
@@ -435,6 +437,8 @@ function enviarPedido() {
   const metodoEntrega = document.getElementById('pedMetodoEntrega').value;
   const esRetiro = metodoEntrega === 'Retiro';
   const direccion = esRetiro ? '' : document.getElementById('pedDireccion').value.trim();
+  const ciudad = esRetiro ? '' : document.getElementById('pedCiudad').value.trim();
+  const provincia = esRetiro ? '' : document.getElementById('pedProvincia').value.trim();
   const codigoPostal = esRetiro ? '' : document.getElementById('pedCodigoPostal').value.trim();
   const detallesEntrega = document.getElementById('pedDetalles').value.trim();
   const horario = document.getElementById('pedHorario').value.trim();
@@ -450,6 +454,10 @@ function enviarPedido() {
   }
   if (!esRetiro && !direccion) {
     document.getElementById('modalMsg').innerHTML = '<div class="msg err">Completá la dirección de envío, o elegí "Retiro en punto de entrega".</div>';
+    return;
+  }
+  if (!esRetiro && (!ciudad || !provincia)) {
+    document.getElementById('modalMsg').innerHTML = '<div class="msg err">Completá ciudad y provincia para poder cotizarte el envío.</div>';
     return;
   }
 
@@ -474,6 +482,8 @@ function enviarPedido() {
     telefono: telefono,
     metodoEntrega: esRetiro ? 'Retiro en Armería Parabellum' : 'Envío a domicilio',
     direccion: direccion,
+    ciudad: ciudad,
+    provincia: provincia,
     codigoPostal: codigoPostal,
     detallesEntrega: detallesEntrega,
     horario: horario,
@@ -494,7 +504,10 @@ function enviarPedido() {
     'Nombre: ' + nombre + '\n' +
     'Teléfono: ' + telefono + '\n';
   if (!esRetiro) {
-    texto += 'Dirección: ' + direccion + '\n' + 'Código postal: ' + codigoPostal + '\n';
+    texto += 'Dirección: ' + direccion + '\n' +
+      'Ciudad: ' + ciudad + '\n' +
+      'Provincia: ' + provincia + '\n' +
+      'Código postal: ' + codigoPostal + '\n';
   }
   texto +=
     'Detalles de entrega: ' + detallesEntrega + '\n' +
