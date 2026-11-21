@@ -152,20 +152,13 @@ function renderizar(lista) {
       media = '<div class="no-img">' + ICONO_MIRA + '<span>Foto próximamente</span></div>';
     }
 
-    const etiquetas =
-      (p.stock > 0 ? '' : '<span class="badge out">Agotado</span>') +
-      (p.enFeria ? '<span class="badge feria">Oferta feria</span>' : '');
-
-    const precioBlock = p.enFeria
-      ? '<div class="price-main"><span class="price">' + formatoPrecio(p.precioVigente) + '</span>' +
-        '<span class="price-lista-tachado">' + formatoPrecio(p.precio) + '</span></div>' +
-        '<div class="price-efectivo">Precio de feria — válido en efectivo, transferencia o tarjeta</div>'
-      : '<div class="price-main"><span class="price">' + formatoPrecio(p.precioVigente) + '</span></div>' +
-        '<div class="price-efectivo">Efectivo: ' + formatoPrecio(p.precioEfectivo) + '</div>';
-
-    const stockLinea = p.stock > 0
-      ? '<div class="stock-line ok">Disponible</div>'
-      : '<div class="stock-line out">Agotado</div>';
+    // El precio en efectivo solo se muestra si en el panel de administrador se dejó
+    // tildado "Mostrar precio en efectivo" para ese producto.
+    const precioBlock =
+      '<div class="price-main"><span class="price">' + formatoPrecio(p.precio) + '</span></div>' +
+      (p.mostrarEfectivo !== false
+        ? '<div class="price-efectivo">Efectivo: ' + formatoPrecio(p.precioEfectivo) + '</div>'
+        : '');
 
     const selectorCalibre = (p.calibres && p.calibres.length)
       ? '<div class="field-block">' +
@@ -189,8 +182,7 @@ function renderizar(lista) {
         '</div>' +
       '</details>';
 
-    // El botón de pedido aparece siempre: el stock del catálogo es solo el disponible
-    // en la feria, pero igual se puede encargar aunque haya (o no) stock en ese momento.
+    // Somos fabricantes: todos los productos se pueden pedir o consultar siempre.
     const botones =
       '<div class="card-actions">' +
         '<button class="add-cart" onclick="agregarAlCarrito(\'' + p.id + '\')">' + ICONO_CARRITO + ' Agregar al carrito</button>' +
@@ -199,14 +191,14 @@ function renderizar(lista) {
 
     const descripcion = p.descripcion || '';
     card.innerHTML =
-      '<div class="card-media">' + media + (etiquetas ? '<div class="card-flags">' + etiquetas + '</div>' : '') + '</div>' +
+      '<div class="card-media">' + media + '</div>' +
       '<div class="body">' +
         (p.linea ? '<div class="eyebrow">' + escapeHtml(p.linea) + '</div>' : '') +
         '<h3>' + escapeHtml(p.nombre) + '</h3>' +
         (descripcion ? '<p class="desc">' + escapeHtml(descripcion) + '</p>' : '') +
         (descripcion.length > 120 ? '<button type="button" class="link-more" onclick="toggleDesc(this)">Ver más</button>' : '') +
         '<div class="spacer"></div>' +
-        '<div class="price-block">' + precioBlock + stockLinea + '</div>' +
+        '<div class="price-block">' + precioBlock + '</div>' +
         selectorCalibre +
         campoPersonalizacion +
         botones +
@@ -270,7 +262,7 @@ function consultarProducto(productoId) {
   const personalizacion = obtenerPersonalizacion(p);
   const texto =
     'Hola! Quiero hacer una consulta sobre este producto de Iron Target:\n\n' +
-    p.nombre + (calibre ? ' (Calibre: ' + calibre + ')' : '') + ' — ' + formatoPrecio(p.precioVigente) +
+    p.nombre + (calibre ? ' (Calibre: ' + calibre + ')' : '') + ' — ' + formatoPrecio(p.precio) +
     (personalizacion ? '\nPersonalización: ' + personalizacion : '');
   const url = 'https://wa.me/' + NUMERO_WHATSAPP + '?text=' + encodeURIComponent(texto);
   abrirWhatsApp(url);
@@ -302,9 +294,7 @@ function agregarAlCarrito(productoId) {
       nombre: p.nombre,
       calibre: calibre,
       personalizacion: personalizacion,
-      enFeria: p.enFeria,
-      precioVigente: p.precioVigente,
-      precioEfectivo: p.precioEfectivo,
+      precioVigente: p.precio,
       cantidad: 1
     });
   }
@@ -372,7 +362,7 @@ function renderizarCarrito() {
         '<div class="nombre">' + escapeHtml(item.nombre) + '</div>' +
         (item.calibre ? '<div class="detalle">Calibre: ' + escapeHtml(item.calibre) + '</div>' : '') +
         (item.personalizacion ? '<div class="detalle">Personalización: ' + escapeHtml(item.personalizacion) + '</div>' : '') +
-        '<div class="detalle">' + formatoPrecio(item.precioVigente) + ' c/u' + (item.enFeria ? ' · precio de feria' : '') + '</div>' +
+        '<div class="detalle">' + formatoPrecio(item.precioVigente) + ' c/u</div>' +
       '</div>' +
       '<div class="cart-item-sub">' + formatoPrecio(item.precioVigente * item.cantidad) + '</div>' +
       '<div class="cart-item-tools">' +
